@@ -1,0 +1,52 @@
+name: Build BKOS-blanco firmware
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'BKOS_blanco/**'
+      - '.github/workflows/build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Arduino CLI installeren
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: ESP32 platform installeren
+        run: |
+          arduino-cli core update-index \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core install esp32:esp32@2.0.17 \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Bibliotheken installeren
+        run: |
+          arduino-cli lib install "Arduino_GFX_Library"
+          arduino-cli lib install "TAMC_GT911"
+
+      - name: Compileren
+        run: |
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32s3:PSRAM=opi,PartitionScheme=default_8MB,FlashSize=16M,FlashMode=qio,FlashFreq=80,CDCOnBoot=cdc" \
+            --output-dir build \
+            BKOS_blanco/
+
+      - name: firmware.bin kopiëren
+        run: |
+          cp build/BKOS_blanco.ino.bin BKOS_blanco/firmware.bin
+
+      - name: Commit en push firmware.bin
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add BKOS_blanco/firmware.bin BKOS_blanco/versie.txt
+          git diff --cached --quiet || git commit -m "CI: firmware.bin bijgewerkt"
+          git push
