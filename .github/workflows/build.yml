@@ -35,7 +35,7 @@ jobs:
       - name: Compileren
         run: |
           arduino-cli compile \
-            --fqbn "esp32:esp32:esp32s3:PSRAM=opi,PartitionScheme=default_8MB,FlashSize=16M,FlashMode=qio,FlashFreq=80,CDCOnBoot=cdc" \
+            --fqbn "esp32:esp32:esp32s3:PSRAM=opi,PartitionScheme=default_8MB,FlashSize=16M,FlashMode=qio,CDCOnBoot=cdc" \
             --output-dir build \
             BKOS_blanco/
 
