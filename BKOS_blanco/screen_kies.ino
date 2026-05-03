@@ -33,8 +33,8 @@ const char* FW_VERSIE_URL[FW_COUNT] = {
 
 const char* FW_BIN_URL[FW_COUNT] = {
     "https://raw.githubusercontent.com/brennyc86/BKOS-NUI/main/BKOS_NUI/firmware.bin",
-    "https://raw.githubusercontent.com/BrendanKoster86/BKOS4/main/firmware.bin",
-    "https://raw.githubusercontent.com/brennyc86/BKOS5a/main/firmware.bin",
+    "https://raw.githubusercontent.com/BrendanKoster86/BKOS4/main/build/esp32.esp32.esp32s3/BKOS4.ino.bin",
+    "https://raw.githubusercontent.com/brennyc86/BKOS5a/main/build/esp32.esp32.esp32s3/BKOS5a.ino.bin",
     "https://raw.githubusercontent.com/brennyc86/BKOS-blanco/main/BKOS_blanco/firmware.bin"
 };
 
