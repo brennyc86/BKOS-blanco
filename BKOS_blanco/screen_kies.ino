@@ -23,19 +23,20 @@ const char* FW_INFO[FW_COUNT] = {
     "Firmware kiezer (dit systeem) — zelf updaten"
 };
 
-// Controleer deze URLs in de repo's als ze niet werken!
+// NUI en blanco URLs zijn platform-afhankelijk (zie ota.h).
+// BKOS4 en BKOS5a zijn alleen voor ESP32-S3; URLs zijn aannames — controleer bij fout 404.
 const char* FW_VERSIE_URL[FW_COUNT] = {
-    "https://raw.githubusercontent.com/brennyc86/BKOS-NUI/main/BKOS_NUI/versie.txt",
+    NUI_VERSIE_URL,
     "https://raw.githubusercontent.com/BrendanKoster86/BKOS4/main/versie.txt",
     "https://raw.githubusercontent.com/brennyc86/BKOS5a/main/versie.txt",
-    "https://raw.githubusercontent.com/brennyc86/BKOS-blanco/main/BKOS_blanco/versie.txt"
+    BLANCO_VERSIE_URL
 };
 
 const char* FW_BIN_URL[FW_COUNT] = {
-    "https://raw.githubusercontent.com/brennyc86/BKOS-NUI/main/BKOS_NUI/firmware.bin",
+    NUI_BIN_URL,
     "https://raw.githubusercontent.com/BrendanKoster86/BKOS4/main/build/esp32.esp32.esp32s3/BKOS4.ino.bin",
     "https://raw.githubusercontent.com/brennyc86/BKOS5a/main/build/esp32.esp32.esp32s3/BKOS5a.ino.bin",
-    "https://raw.githubusercontent.com/brennyc86/BKOS-blanco/main/BKOS_blanco/firmware.bin"
+    BLANCO_BIN_URL
 };
 
 uint16_t FW_KLEUR[FW_COUNT] = {

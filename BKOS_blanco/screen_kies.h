@@ -1,6 +1,7 @@
 #pragma once
 #include "ui_draw.h"
 #include "app_state.h"
+#include "ota.h"
 
 // ─── Firmware tabel ─────────────────────────────────────────────────────────
 // Pas de URLs aan als de repo-structuur van BKOS4 of BKOS5a afwijkt.

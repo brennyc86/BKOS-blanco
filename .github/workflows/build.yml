@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build_esp32s3:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,21 +32,81 @@ jobs:
           arduino-cli lib install "Arduino_GFX_Library"
           arduino-cli lib install "TAMC_GT911"
 
-      - name: Compileren
+      - name: Versie uitlezen
+        id: versie
+        run: |
+          V=$(grep 'BLANCO_VERSIE' BKOS_blanco/ota.h | grep -o '"[^"]*"' | tr -d '"')
+          echo "versie=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Compileren ESP32-S3
         run: |
           arduino-cli compile \
             --fqbn "esp32:esp32:esp32s3:PSRAM=opi,PartitionScheme=default_8MB,FlashSize=16M,FlashMode=qio,CDCOnBoot=cdc" \
-            --output-dir build \
+            --output-dir build_s3 \
             BKOS_blanco/
 
-      - name: firmware.bin kopiëren
+      - name: firmware kopiëren naar firmware/
         run: |
-          cp build/BKOS_blanco.ino.bin BKOS_blanco/firmware.bin
+          mkdir -p firmware
+          cp build_s3/BKOS_blanco.ino.bin firmware/bkos_blanco_esp32s3.bin
+          echo "${{ steps.versie.outputs.versie }}" > firmware/versie_esp32s3.txt
 
-      - name: Commit en push firmware.bin
+      - name: Commit en push ESP32-S3 firmware
         run: |
           git config user.name  "GitHub Actions"
           git config user.email "actions@github.com"
-          git add BKOS_blanco/firmware.bin BKOS_blanco/versie.txt
-          git diff --cached --quiet || git commit -m "CI: firmware.bin bijgewerkt"
+          git add firmware/bkos_blanco_esp32s3.bin firmware/versie_esp32s3.txt
+          git diff --cached --quiet || git commit -m "CI: bkos_blanco_esp32s3.bin ${{ steps.versie.outputs.versie }}"
+          git pull --rebase
+          git push
+
+  build_wroom:
+    needs: build_esp32s3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Arduino CLI installeren
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: ESP32 platform installeren
+        run: |
+          arduino-cli core update-index \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core install esp32:esp32@2.0.17 \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Bibliotheken installeren
+        run: |
+          arduino-cli lib install "Arduino_GFX_Library"
+          arduino-cli lib install "TAMC_GT911"
+
+      - name: Versie uitlezen
+        id: versie
+        run: |
+          V=$(grep 'BLANCO_VERSIE' BKOS_blanco/ota.h | grep -o '"[^"]*"' | tr -d '"')
+          echo "versie=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Compileren WROOM
+        run: |
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32:PartitionScheme=default,FlashFreq=80,FlashMode=dio" \
+            --build-property "compiler.cpp.extra_flags=-DPLATFORM_WROOM=1" \
+            --output-dir build_wroom \
+            BKOS_blanco/
+
+      - name: firmware kopiëren naar firmware/
+        run: |
+          mkdir -p firmware
+          cp build_wroom/BKOS_blanco.ino.bin firmware/bkos_blanco_wroom.bin
+          echo "${{ steps.versie.outputs.versie }}" > firmware/versie_wroom.txt
+
+      - name: Commit en push WROOM firmware
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull --rebase
+          git add firmware/bkos_blanco_wroom.bin firmware/versie_wroom.txt
+          git diff --cached --quiet || git commit -m "CI: bkos_blanco_wroom.bin ${{ steps.versie.outputs.versie }}"
           git push
