@@ -55,14 +55,14 @@
   #define TFT_W     240
   #define TFT_H     320
   #define TFT_BL    19
-  #define TFT_CS    15
-  #define TFT_DC     2
+  #define TFT_CS     0   // GPIO0  (zie BKOS4 hw_scherm.h)
+  #define TFT_DC    23   // GPIO23 (zie BKOS4 hw_scherm.h)
   #define TFT_RST   -1
   #define TFT_SCK   14
   #define TFT_MOSI  13
   #define TFT_MISO  12
-  #define WROOM_TS_CS   33
-  #define WROOM_TS_IRQ  36
+  #define WROOM_TS_CS   22   // GPIO22 (zie BKOS4 hw_touch.h)
+  #define WROOM_TS_IRQ  21   // GPIO21 (zie BKOS4 hw_touch.h)
 
 #elif PLATFORM_CYD28
   #define TFT_W     240

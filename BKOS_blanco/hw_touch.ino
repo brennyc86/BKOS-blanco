@@ -47,7 +47,7 @@ static void ts_lees_xy() {
     ts_x = map(p.y, ts_cal_py_min, ts_cal_py_max, 0, TFT_W);
     ts_y = map(p.x, ts_cal_px_hi,  ts_cal_px_lo,  0, TFT_H);
 }
-// Gespiegelde variant voor setRotation(2) (CYD28)
+// Gespiegelde variant voor CYD28 (touch-panel 180° t.o.v. display)
 static void ts_lees_xy_rot180() {
     TS_Point p = ts.getPoint();
     ts_x = map(p.y, ts_cal_py_max, ts_cal_py_min, 0, TFT_W);
