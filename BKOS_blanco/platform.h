@@ -95,11 +95,12 @@
   #define TFT_SCK   14
   #define TFT_MOSI  13
   #define TFT_MISO  12
-  #define CYD40_TS_SCK   25
-  #define CYD40_TS_MOSI  32
-  #define CYD40_TS_MISO  39
+  // Touch deelt HSPI met display (SCK=14, MOSI=13, MISO=12), eigen CS=33
+  #define CYD40_TS_SCK   14
+  #define CYD40_TS_MOSI  13
+  #define CYD40_TS_MISO  12
   #define CYD40_TS_CS    33
-  #define CYD40_TS_IRQ   36   // XPT2046 heeft interne pull-up
+  #define CYD40_TS_IRQ   36
 
 #else
   // ESP32-S3 800×480 RGB
