@@ -11,6 +11,12 @@
   #define TS_RST  38
 #endif
 
+// Gedeelde HSPI bus voor display + touch (WROOM / CYD28)
+// HSPI native pins op ESP32: SCK=14, MISO=12, MOSI=13 — matchen exact onze hardware
+#if (PLATFORM_WROOM || PLATFORM_CYD28) && PLATFORM_ESP32
+  extern SPIClass shared_hspi;
+#endif
+
 extern bool actieve_touch;
 extern int  ts_x;
 extern int  ts_y;

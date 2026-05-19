@@ -5,6 +5,14 @@ bool actieve_touch = false;
 int  ts_x = 0;
 int  ts_y = 0;
 
+// ─── Gedeelde HSPI bus voor WROOM / CYD28 ────────────────────────────────────
+// HSPI default pins op ESP32: SCK=14, MISO=12, MOSI=13
+// Arduino_HWSPI::begin() roept shared_hspi.begin(14,12,13) aan via expliciete params
+// ts.begin() roept shared_hspi.begin() nogmaals aan → no-op (al geïnitialiseerd)
+#if (PLATFORM_WROOM || PLATFORM_CYD28) && PLATFORM_ESP32
+  SPIClass shared_hspi(HSPI);
+#endif
+
 // ─── Touch-objecten ───────────────────────────────────────────────────────────
 #if PLATFORM_ESP32 && !PLATFORM_WROOM && !PLATFORM_CYD
     static TAMC_GT911 ts(TS_SDA, TS_SCK, -1, TS_RST, TFT_W, TFT_H);
@@ -32,9 +40,8 @@ static int ts_cal_px_lo  = 200;
 #endif
 
 // ─── XPT2046 assen berekening ─────────────────────────────────────────────────
-// De touch-paneel-assen zijn 90° gedraaid t.o.v. het display:
-//   raw X → scherm Y (omgekeerd)
-//   raw Y → scherm X
+// Touch-paneel assen zijn 90° gedraaid t.o.v. display:
+//   raw Y → scherm X,  raw X omgekeerd → scherm Y
 #if PLATFORM_XPT2046
 static void ts_lees_xy() {
     TS_Point p = ts.getPoint();
@@ -53,12 +60,14 @@ void ts_setup() {
     ts.setRotation(0);
 
 #elif PLATFORM_WROOM || PLATFORM_CYD28
-    // SPI geïnitialiseerd door tft_setup() met HSPI-pinnen; touch deelt deze bus
-    ts.begin(SPI);
+    // shared_hspi is geïnitialiseerd door tft_setup() via Arduino_HWSPI::begin()
+    // ts.begin() slaat de referentie op; de interne begin()-aanroep is een no-op
+    ts.begin(shared_hspi);
     ts.setRotation(0);
 
 #elif PLATFORM_CYD40H || PLATFORM_CYD40V
-    // Display gebruikt HSPI; touch heeft eigen VSPI (GPIO 25/32/39/33)
+    // Aparte VSPI voor touch (display gebruikt HSPI)
+    // Initialiseer VSPI met expliciete pins VOOR ts.begin(), zodat begin() no-op is
     cyd_vspi.begin(CYD40_TS_SCK, CYD40_TS_MISO, CYD40_TS_MOSI, CYD40_TS_CS);
     ts.begin(cyd_vspi);
     ts.setRotation(0);

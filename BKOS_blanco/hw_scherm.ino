@@ -25,9 +25,10 @@ void tft_setup() {
     tft_p = new Arduino_RGB_Display(800, 480, rgbpanel, 0, true);
 
 #elif PLATFORM_WROOM || PLATFORM_CYD28
-    // ── ILI9341 240×320 via HSPI ─────────────────────────────────────────
-    SPI.begin(TFT_SCK, TFT_MISO, TFT_MOSI);
-    Arduino_DataBus *bus = new Arduino_HWSPI(TFT_DC, TFT_CS);
+    // ── ILI9341 240×320 via HSPI (native ESP32 pins: SCK=14, MISO=12, MOSI=13)
+    // shared_hspi wordt hier geïnitialiseerd via Arduino_HWSPI::begin()
+    // die intern shared_hspi.begin(SCK, MISO, MOSI) aanroept met expliciete pins
+    Arduino_DataBus *bus = new Arduino_HWSPI(TFT_DC, TFT_CS, TFT_SCK, TFT_MOSI, TFT_MISO, &shared_hspi);
     tft_p = new Arduino_ILI9341(bus, TFT_RST, 0, false);
 
 #elif PLATFORM_CYD40H || PLATFORM_CYD40V
