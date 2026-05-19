@@ -74,7 +74,11 @@
   #define TFT_SCK   14
   #define TFT_MOSI  13
   #define TFT_MISO  12
-  #define CYD28_TS_CS  33
+  #define CYD28_TS_SCK   25
+  #define CYD28_TS_MOSI  32
+  #define CYD28_TS_MISO  39
+  #define CYD28_TS_IRQ   36
+  #define CYD28_TS_CS    33
 
 #elif PLATFORM_CYD40H || PLATFORM_CYD40V
   #if PLATFORM_CYD40H

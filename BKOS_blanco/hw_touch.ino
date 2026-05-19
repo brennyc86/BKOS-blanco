@@ -5,11 +5,11 @@ bool actieve_touch = false;
 int  ts_x = 0;
 int  ts_y = 0;
 
-// ─── Gedeelde HSPI bus voor WROOM / CYD28 ────────────────────────────────────
+// ─── Gedeelde HSPI bus voor WROOM (display + touch delen bus via CS) ─────────
 // HSPI default pins op ESP32: SCK=14, MISO=12, MOSI=13
 // Arduino_HWSPI::begin() roept shared_hspi.begin(14,12,13) aan via expliciete params
 // ts.begin() roept shared_hspi.begin() nogmaals aan → no-op (al geïnitialiseerd)
-#if (PLATFORM_WROOM || PLATFORM_CYD28) && PLATFORM_ESP32
+#if PLATFORM_WROOM && PLATFORM_ESP32
   SPIClass shared_hspi(HSPI);
 #endif
 
@@ -24,7 +24,8 @@ int  ts_y = 0;
     static XPT2046_Touchscreen ts(WROOM_TS_CS, WROOM_TS_IRQ);
 
 #elif PLATFORM_CYD28
-    static XPT2046_Touchscreen ts(CYD28_TS_CS);   // geen IRQ op CYD28
+    static SPIClass              cyd28_vspi(VSPI);
+    static XPT2046_Touchscreen   ts(CYD28_TS_CS, CYD28_TS_IRQ);  // aparte VSPI met IRQ
 
 #elif PLATFORM_CYD40H || PLATFORM_CYD40V
     static SPIClass              cyd_vspi(VSPI);
@@ -59,15 +60,19 @@ void ts_setup() {
     ts.begin(SPI);
     ts.setRotation(0);
 
-#elif PLATFORM_WROOM || PLATFORM_CYD28
+#elif PLATFORM_WROOM
     // shared_hspi is geïnitialiseerd door tft_setup() via Arduino_HWSPI::begin()
-    // ts.begin() slaat de referentie op; de interne begin()-aanroep is een no-op
     ts.begin(shared_hspi);
+    ts.setRotation(0);
+
+#elif PLATFORM_CYD28
+    // Aparte VSPI voor touch (display gebruikt HSPI)
+    cyd28_vspi.begin(CYD28_TS_SCK, CYD28_TS_MISO, CYD28_TS_MOSI, CYD28_TS_CS);
+    ts.begin(cyd28_vspi);
     ts.setRotation(0);
 
 #elif PLATFORM_CYD40H || PLATFORM_CYD40V
     // Aparte VSPI voor touch (display gebruikt HSPI)
-    // Initialiseer VSPI met expliciete pins VOOR ts.begin(), zodat begin() no-op is
     cyd_vspi.begin(CYD40_TS_SCK, CYD40_TS_MISO, CYD40_TS_MOSI, CYD40_TS_CS);
     ts.begin(cyd_vspi);
     ts.setRotation(0);
@@ -87,7 +92,7 @@ bool ts_touched() {
     actieve_touch = false;
     return false;
 
-#elif PLATFORM_PICO || PLATFORM_WROOM
+#elif PLATFORM_PICO || PLATFORM_WROOM || PLATFORM_CYD28
     if (ts.tirqTouched() && ts.touched()) {
         ts_lees_xy();
         scherm_touched = millis();
@@ -97,7 +102,7 @@ bool ts_touched() {
     actieve_touch = false;
     return false;
 
-#elif PLATFORM_CYD28 || PLATFORM_CYD40H || PLATFORM_CYD40V
+#elif PLATFORM_CYD40H || PLATFORM_CYD40V
     if (ts.touched()) {
         ts_lees_xy();
         scherm_touched = millis();
