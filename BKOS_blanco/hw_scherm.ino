@@ -1,10 +1,53 @@
 #include "hw_scherm.h"
 #include "hw_touch.h"
 
+Arduino_GFX *tft_p = nullptr;
+
+int           tft_helderheid    = 75;
+long          scherm_timer      = 60;
+bool          tft_actief        = true;
+long          scherm_touched    = 0;
+bool          scherm_net_gewekt = false;
+bool          tft_bijna_uit     = false;
+unsigned long tft_dim_ms        = 0;
+
 void tft_setup() {
-    pinMode(TFT_BL, OUTPUT);
+#if PLATFORM_ESP32 && !PLATFORM_WROOM && !PLATFORM_CYD
+    // ── ESP32-S3: 800×480 RGB panel ─────────────────────────────────────
+    Arduino_ESP32RGBPanel *rgbpanel = new Arduino_ESP32RGBPanel(
+        41, 40, 39, 42,
+        14, 21, 47, 48, 45,
+         9, 46,  3,  8, 16,  1,
+        15,  7,  6,  5,  4,
+        0, 210, 30, 16,
+        0,  22, 13, 10,
+        1, 16000000);
+    tft_p = new Arduino_RGB_Display(800, 480, rgbpanel, 0, true);
+
+#elif PLATFORM_WROOM || PLATFORM_CYD28
+    // ── ILI9341 240×320 via HSPI ─────────────────────────────────────────
+    SPI.begin(TFT_SCK, TFT_MISO, TFT_MOSI);
+    Arduino_DataBus *bus = new Arduino_HWSPI(TFT_DC, TFT_CS);
+    tft_p = new Arduino_ILI9341(bus, TFT_RST, 0, false);
+
+#elif PLATFORM_CYD40H || PLATFORM_CYD40V
+    // ── ST7796 480×320 / 320×480 via HSPI ────────────────────────────────
+    Arduino_DataBus *bus = new Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCK, TFT_MOSI, TFT_MISO, HSPI);
+    tft_p = new Arduino_ST7796(bus, TFT_RST, 0, false);
+
+#elif PLATFORM_PICO
+    // ── Pico W: ILI9341 via SPI0 ─────────────────────────────────────────
+    SPI.setRX(TFT_MISO);
+    SPI.setTX(TFT_MOSI);
+    SPI.setSCK(TFT_SCK);
+    SPI.begin();
+    Arduino_DataBus *bus = new Arduino_HWSPI(TFT_DC, TFT_CS);
+    tft_p = new Arduino_ILI9341(bus, TFT_RST, 0, false);
+#endif
+
     tft.begin();
     tft.setRotation(0);
+    pinMode(TFT_BL, OUTPUT);
     tft_helderheid_zet(tft_helderheid);
 }
 

@@ -1,15 +1,19 @@
 #pragma once
-#include <TAMC_GT911.h>
+#include "platform.h"
 
-#define TS_SDA  19
-#define TS_SCK  20
-#define TS_RST  38
+#if PLATFORM_XPT2046
+  #include <XPT2046_Touchscreen.h>
+  #include <SPI.h>
+#elif PLATFORM_ESP32
+  #include <TAMC_GT911.h>
+  #define TS_SDA  19
+  #define TS_SCK  20
+  #define TS_RST  38
+#endif
 
-TAMC_GT911 ts(TS_SDA, TS_SCK, -1, TS_RST, 490, 480);
-
-bool actieve_touch = false;
-int  ts_x = 0;
-int  ts_y = 0;
+extern bool actieve_touch;
+extern int  ts_x;
+extern int  ts_y;
 
 void ts_setup();
 bool ts_touched();

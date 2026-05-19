@@ -22,8 +22,10 @@ jobs:
 
       - name: ESP32 platform installeren
         run: |
-          arduino-cli core update-index \
-            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index
           arduino-cli core install esp32:esp32@2.0.17 \
             --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
@@ -45,7 +47,7 @@ jobs:
             --output-dir build_s3 \
             BKOS_blanco/
 
-      - name: firmware kopiëren naar firmware/
+      - name: Firmware opslaan
         run: |
           mkdir -p firmware
           cp build_s3/BKOS_blanco.ino.bin firmware/bkos_blanco_esp32s3.bin
@@ -72,15 +74,17 @@ jobs:
 
       - name: ESP32 platform installeren
         run: |
-          arduino-cli core update-index \
-            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index
           arduino-cli core install esp32:esp32@2.0.17 \
             --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
       - name: Bibliotheken installeren
         run: |
           arduino-cli lib install "Arduino_GFX_Library"
-          arduino-cli lib install "TAMC_GT911"
+          arduino-cli lib install "XPT2046_Touchscreen"
 
       - name: Versie uitlezen
         id: versie
@@ -96,7 +100,7 @@ jobs:
             --output-dir build_wroom \
             BKOS_blanco/
 
-      - name: firmware kopiëren naar firmware/
+      - name: Firmware opslaan
         run: |
           mkdir -p firmware
           cp build_wroom/BKOS_blanco.ino.bin firmware/bkos_blanco_wroom.bin
@@ -109,4 +113,215 @@ jobs:
           git pull --rebase
           git add firmware/bkos_blanco_wroom.bin firmware/versie_wroom.txt
           git diff --cached --quiet || git commit -m "CI: bkos_blanco_wroom.bin ${{ steps.versie.outputs.versie }}"
+          git push
+
+  build_cyd28:
+    needs: build_wroom
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Arduino CLI installeren
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: ESP32 platform installeren
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@2.0.17 \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Bibliotheken installeren
+        run: |
+          arduino-cli lib install "Arduino_GFX_Library"
+          arduino-cli lib install "XPT2046_Touchscreen"
+
+      - name: Versie uitlezen
+        id: versie
+        run: |
+          V=$(grep 'BLANCO_VERSIE' BKOS_blanco/ota.h | grep -o '"[^"]*"' | tr -d '"')
+          echo "versie=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Compileren CYD28
+        run: |
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32:PartitionScheme=default,FlashFreq=80,FlashMode=dio" \
+            --build-property "compiler.cpp.extra_flags=-DPLATFORM_CYD28=1" \
+            --output-dir build_cyd28 \
+            BKOS_blanco/
+
+      - name: Firmware opslaan
+        run: |
+          mkdir -p firmware
+          cp build_cyd28/BKOS_blanco.ino.bin firmware/bkos_blanco_cyd28.bin
+          echo "${{ steps.versie.outputs.versie }}" > firmware/versie_cyd28.txt
+
+      - name: Commit en push CYD28 firmware
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull --rebase
+          git add firmware/bkos_blanco_cyd28.bin firmware/versie_cyd28.txt
+          git diff --cached --quiet || git commit -m "CI: bkos_blanco_cyd28.bin ${{ steps.versie.outputs.versie }}"
+          git push
+
+  build_cyd40h:
+    needs: build_cyd28
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Arduino CLI installeren
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: ESP32 platform installeren
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@2.0.17 \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Bibliotheken installeren
+        run: |
+          arduino-cli lib install "Arduino_GFX_Library"
+          arduino-cli lib install "XPT2046_Touchscreen"
+
+      - name: Versie uitlezen
+        id: versie
+        run: |
+          V=$(grep 'BLANCO_VERSIE' BKOS_blanco/ota.h | grep -o '"[^"]*"' | tr -d '"')
+          echo "versie=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Compileren CYD40H
+        run: |
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32:PartitionScheme=default,FlashFreq=80,FlashMode=dio" \
+            --build-property "compiler.cpp.extra_flags=-DPLATFORM_CYD40H=1" \
+            --output-dir build_cyd40h \
+            BKOS_blanco/
+
+      - name: Firmware opslaan
+        run: |
+          mkdir -p firmware
+          cp build_cyd40h/BKOS_blanco.ino.bin firmware/bkos_blanco_cyd40h.bin
+          echo "${{ steps.versie.outputs.versie }}" > firmware/versie_cyd40h.txt
+
+      - name: Commit en push CYD40H firmware
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull --rebase
+          git add firmware/bkos_blanco_cyd40h.bin firmware/versie_cyd40h.txt
+          git diff --cached --quiet || git commit -m "CI: bkos_blanco_cyd40h.bin ${{ steps.versie.outputs.versie }}"
+          git push
+
+  build_cyd40v:
+    needs: build_cyd40h
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Arduino CLI installeren
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: ESP32 platform installeren
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@2.0.17 \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Bibliotheken installeren
+        run: |
+          arduino-cli lib install "Arduino_GFX_Library"
+          arduino-cli lib install "XPT2046_Touchscreen"
+
+      - name: Versie uitlezen
+        id: versie
+        run: |
+          V=$(grep 'BLANCO_VERSIE' BKOS_blanco/ota.h | grep -o '"[^"]*"' | tr -d '"')
+          echo "versie=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Compileren CYD40V
+        run: |
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32:PartitionScheme=default,FlashFreq=80,FlashMode=dio" \
+            --build-property "compiler.cpp.extra_flags=-DPLATFORM_CYD40V=1" \
+            --output-dir build_cyd40v \
+            BKOS_blanco/
+
+      - name: Firmware opslaan
+        run: |
+          mkdir -p firmware
+          cp build_cyd40v/BKOS_blanco.ino.bin firmware/bkos_blanco_cyd40v.bin
+          echo "${{ steps.versie.outputs.versie }}" > firmware/versie_cyd40v.txt
+
+      - name: Commit en push CYD40V firmware
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull --rebase
+          git add firmware/bkos_blanco_cyd40v.bin firmware/versie_cyd40v.txt
+          git diff --cached --quiet || git commit -m "CI: bkos_blanco_cyd40v.bin ${{ steps.versie.outputs.versie }}"
+          git push
+
+  build_pico:
+    needs: build_cyd40v
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Arduino CLI installeren
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: arduino-pico platform installeren
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+          arduino-cli core update-index
+          arduino-cli core install rp2040:rp2040@5.4.4
+
+      - name: Bibliotheken installeren
+        run: |
+          arduino-cli lib install "Arduino_GFX_Library"
+          arduino-cli lib install "XPT2046_Touchscreen"
+          arduino-cli lib install "Preferences@2.2.2"
+
+      - name: Versie uitlezen
+        id: versie
+        run: |
+          V=$(grep 'BLANCO_VERSIE' BKOS_blanco/ota.h | grep -o '"[^"]*"' | tr -d '"')
+          echo "versie=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Compileren Pico W
+        run: |
+          arduino-cli compile \
+            --fqbn "rp2040:rp2040:rpipicow:flash=2097152_65536,freq=133,opt=Optimize2,rtti=Disabled,exceptions=Disabled,dbgport=Disabled,dbglvl=None,usbstack=picosdk,ipbtstack=ipv4only" \
+            --output-dir build_pico \
+            BKOS_blanco/
+
+      - name: Firmware opslaan
+        run: |
+          mkdir -p firmware
+          cp build_pico/BKOS_blanco.ino.uf2 firmware/bkos_blanco_pico.uf2
+          echo "${{ steps.versie.outputs.versie }}" > firmware/versie_pico.txt
+
+      - name: Commit en push Pico firmware
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull --rebase
+          git add firmware/bkos_blanco_pico.uf2 firmware/versie_pico.txt
+          git diff --cached --quiet || git commit -m "CI: bkos_blanco_pico.uf2 ${{ steps.versie.outputs.versie }}"
           git push
