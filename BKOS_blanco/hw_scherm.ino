@@ -46,7 +46,11 @@ void tft_setup() {
 #endif
 
     tft.begin();
+#if PLATFORM_CYD40H
+    tft.setRotation(1);   // 480×320 landscape (ST7796 native = portret)
+#else
     tft.setRotation(0);
+#endif
     pinMode(TFT_BL, OUTPUT);
     tft_helderheid_zet(tft_helderheid);
 }
