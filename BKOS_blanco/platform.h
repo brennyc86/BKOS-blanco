@@ -55,14 +55,19 @@
   #define TFT_W     240
   #define TFT_H     320
   #define TFT_BL    19
-  #define TFT_CS    15   // GPIO15 (zie BKOS3 hardware.h: cs_tft=15)
-  #define TFT_DC    23   // GPIO23 (zie BKOS3/4: dc=23)
-  #define TFT_RST   16   // GPIO16 (zie BKOS3 hardware.h: rst=16)
+  #define TFT_CS     0   // GPIO0  (HC_SCK=15 → TFT_CS mag niet GPIO15 zijn)
+  #define TFT_DC    23   // GPIO23
+  #define TFT_RST   16   // GPIO16
   #define TFT_SCK   14
   #define TFT_MOSI  13
   #define TFT_MISO  12
-  #define WROOM_TS_CS   22   // GPIO22 (zie BKOS3: cs_ts=22)
-  #define WROOM_TS_IRQ  21   // GPIO21 (zie BKOS3: irq=21)
+  #define WROOM_TS_CS   22   // GPIO22
+  #define WROOM_TS_IRQ  21   // GPIO21
+  #define HC_IN    35   // GPIO35 (input-only)
+  #define HC_SCK   15   // GPIO15
+  #define HC_PCK    2   // GPIO2
+  #define HC_UIT    4   // GPIO4
+  #define HC_ID    34   // GPIO34 (input-only)
 
 #elif PLATFORM_CYD28
   #define TFT_W     240
