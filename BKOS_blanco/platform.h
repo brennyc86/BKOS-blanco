@@ -54,7 +54,7 @@
 #elif PLATFORM_WROOM
   #define TFT_W     240
   #define TFT_H     320
-  #define TFT_BL    21
+  #define TFT_BL    19
   #define TFT_CS    15
   #define TFT_DC     2
   #define TFT_RST   -1
