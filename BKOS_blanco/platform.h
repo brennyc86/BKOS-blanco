@@ -99,6 +99,7 @@
   #define CYD40_TS_MOSI  32
   #define CYD40_TS_MISO  39
   #define CYD40_TS_CS    33
+  #define CYD40_TS_IRQ   36   // XPT2046 heeft interne pull-up
 
 #else
   // ESP32-S3 800×480 RGB

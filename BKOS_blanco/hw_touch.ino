@@ -29,7 +29,7 @@ int  ts_y = 0;
 
 #elif PLATFORM_CYD40H || PLATFORM_CYD40V
     static SPIClass              cyd_vspi(VSPI);
-    static XPT2046_Touchscreen   ts(CYD40_TS_CS);  // aparte VSPI, geen IRQ
+    static XPT2046_Touchscreen   ts(CYD40_TS_CS, CYD40_TS_IRQ);  // aparte VSPI met IRQ
 #endif
 
 // ─── Kalibratie (XPT2046) ─────────────────────────────────────────────────────
@@ -41,13 +41,17 @@ static int ts_cal_px_lo  = 200;
 #endif
 
 // ─── XPT2046 assen berekening ─────────────────────────────────────────────────
-// Touch-paneel assen zijn 90° gedraaid t.o.v. display:
-//   raw Y → scherm X,  raw X omgekeerd → scherm Y
 #if PLATFORM_XPT2046
 static void ts_lees_xy() {
     TS_Point p = ts.getPoint();
     ts_x = map(p.y, ts_cal_py_min, ts_cal_py_max, 0, TFT_W);
     ts_y = map(p.x, ts_cal_px_hi,  ts_cal_px_lo,  0, TFT_H);
+}
+// Gespiegelde variant voor setRotation(2) (CYD28)
+static void ts_lees_xy_rot180() {
+    TS_Point p = ts.getPoint();
+    ts_x = map(p.y, ts_cal_py_max, ts_cal_py_min, 0, TFT_W);
+    ts_y = map(p.x, ts_cal_px_lo,  ts_cal_px_hi,  0, TFT_H);
 }
 #endif
 
@@ -92,7 +96,7 @@ bool ts_touched() {
     actieve_touch = false;
     return false;
 
-#elif PLATFORM_PICO || PLATFORM_WROOM || PLATFORM_CYD28
+#elif PLATFORM_PICO || PLATFORM_WROOM
     if (ts.tirqTouched() && ts.touched()) {
         ts_lees_xy();
         scherm_touched = millis();
@@ -102,8 +106,20 @@ bool ts_touched() {
     actieve_touch = false;
     return false;
 
+#elif PLATFORM_CYD28
+    // Display setRotation(2) → assen gespiegeld
+    if (ts.tirqTouched() && ts.touched()) {
+        ts_lees_xy_rot180();
+        scherm_touched = millis();
+        actieve_touch  = true;
+        return true;
+    }
+    actieve_touch = false;
+    return false;
+
 #elif PLATFORM_CYD40H || PLATFORM_CYD40V
-    if (ts.touched()) {
+    // IRQ op GPIO36 (XPT2046 heeft interne pull-up)
+    if (ts.tirqTouched() && ts.touched()) {
         ts_lees_xy();
         scherm_touched = millis();
         actieve_touch  = true;

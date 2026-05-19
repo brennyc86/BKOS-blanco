@@ -51,7 +51,9 @@ void tft_setup() {
 
     tft.begin();
 #if PLATFORM_CYD40H
-    tft.setRotation(1);   // 480×320 landscape (ST7796 native = portret)
+    tft.setRotation(1);   // 480×320 landscape
+#elif PLATFORM_CYD28
+    tft.setRotation(2);   // portret 180° (connector-oriëntatie CYD28 board)
 #else
     tft.setRotation(0);
 #endif
