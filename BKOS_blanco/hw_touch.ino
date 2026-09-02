@@ -89,6 +89,7 @@ bool ts_touched() {
     if (ts.isTouched) {
         ts_x = map(ts.points[0].y, 5, 800, 0, TFT_W);
         ts_y = map(ts.points[0].x, 490, 5, 0, TFT_H);
+        if (tft_gedraaid) { ts_x = TFT_W - 1 - ts_x; ts_y = TFT_H - 1 - ts_y; }
         scherm_touched = millis();
         actieve_touch  = true;
         return true;
@@ -99,6 +100,7 @@ bool ts_touched() {
 #elif PLATFORM_PICO || PLATFORM_WROOM
     if (ts.tirqTouched() && ts.touched()) {
         ts_lees_xy();
+        if (tft_gedraaid) { ts_x = TFT_W - 1 - ts_x; ts_y = TFT_H - 1 - ts_y; }
         scherm_touched = millis();
         actieve_touch  = true;
         return true;
@@ -107,9 +109,11 @@ bool ts_touched() {
     return false;
 
 #elif PLATFORM_CYD28
-    // Display setRotation(2) → assen gespiegeld
+    // Display setRotation(2) → assen gespiegeld (vaste hardware-eigenaardigheid
+    // van dit board, los van de optionele tft_gedraaid-gebruikersvoorkeur)
     if (ts.tirqTouched() && ts.touched()) {
         ts_lees_xy_rot180();
+        if (tft_gedraaid) { ts_x = TFT_W - 1 - ts_x; ts_y = TFT_H - 1 - ts_y; }
         scherm_touched = millis();
         actieve_touch  = true;
         return true;
@@ -121,6 +125,7 @@ bool ts_touched() {
     // IRQ op GPIO36 (XPT2046 heeft interne pull-up)
     if (ts.tirqTouched() && ts.touched()) {
         ts_lees_xy();
+        if (tft_gedraaid) { ts_x = TFT_W - 1 - ts_x; ts_y = TFT_H - 1 - ts_y; }
         scherm_touched = millis();
         actieve_touch  = true;
         return true;

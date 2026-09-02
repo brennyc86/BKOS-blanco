@@ -1,7 +1,7 @@
 #pragma once
 #include "platform.h"
 
-#define BLANCO_VERSIE "0.0.260519.10"
+#define BLANCO_VERSIE "0.0.260902.1"
 
 // ─── BKOS-NUI firmware URLs (platform-afhankelijk) ───────────────────────────
 #if PLATFORM_WROOM

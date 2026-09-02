@@ -1,5 +1,16 @@
 #include "hw_scherm.h"
 #include "hw_touch.h"
+// Zelfde bestandssysteem-abstractie als BKOS-NUI's platform_fs.h: SPIFFS op
+// ESP32, LittleFS op Pico (RP2040 LittleFS::begin() heeft geen format-argument).
+#if PLATFORM_PICO
+  #include <LittleFS.h>
+  #define BLANCO_FS LittleFS
+  #define BLANCO_FS_BEGIN() (BLANCO_FS.begin())
+#else
+  #include <SPIFFS.h>
+  #define BLANCO_FS SPIFFS
+  #define BLANCO_FS_BEGIN() (BLANCO_FS.begin(true))
+#endif
 
 Arduino_GFX *tft_p = nullptr;
 
@@ -10,8 +21,31 @@ long          scherm_touched    = 0;
 bool          scherm_net_gewekt = false;
 bool          tft_bijna_uit     = false;
 unsigned long tft_dim_ms        = 0;
+bool          tft_gedraaid      = false;
+
+// Leest "draai=1" uit een eventueel achtergebleven BKOS-NUI config-bestand
+// (/bkos_config.csv, zelfde partitie/formaat als BKOS-NUI's app_state.ino
+// schrijft). Ontbreekt het bestand (nooit BKOS-NUI geïnstalleerd geweest,
+// of een compleet lege flash) dan blijft het gewoon rechtop — geen fout.
+static bool _gedraaid_uit_nui_config() {
+    if (!BLANCO_FS_BEGIN()) return false;
+    File f = BLANCO_FS.open("/bkos_config.csv", "r");
+    if (!f) return false;
+    bool gedraaid = false;
+    while (f.available()) {
+        String lijn = f.readStringUntil('\n');
+        lijn.trim();
+        if (lijn.startsWith("draai=")) {
+            gedraaid = (lijn.substring(6).toInt() != 0);
+            break;
+        }
+    }
+    f.close();
+    return gedraaid;
+}
 
 void tft_setup() {
+    tft_gedraaid = _gedraaid_uit_nui_config();
 #if PLATFORM_ESP32 && !PLATFORM_WROOM && !PLATFORM_CYD
     // ── ESP32-S3: 800×480 RGB panel ─────────────────────────────────────
     Arduino_ESP32RGBPanel *rgbpanel = new Arduino_ESP32RGBPanel(
@@ -51,9 +85,9 @@ void tft_setup() {
 
     tft.begin();
 #if PLATFORM_CYD40H
-    tft.setRotation(1);   // 480×320 landscape
+    tft.setRotation(tft_gedraaid ? 3 : 1);   // 480×320 landscape, +180° indien gedraaid
 #else
-    tft.setRotation(0);
+    tft.setRotation(tft_gedraaid ? 2 : 0);
 #endif
     pinMode(TFT_BL, OUTPUT);
     tft_helderheid_zet(tft_helderheid);
