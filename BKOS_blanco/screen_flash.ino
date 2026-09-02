@@ -52,15 +52,25 @@ static void status_teken(const char* tekst, uint16_t kleur) {
     tft.print(tekst);
 }
 
+static bool fl_bevestigd = false;
+
+// Bevestig-knoppen delen de FL_BAR-rij (die pas na bevestiging de
+// voortgangsbalk wordt). Links = ANNULEREN, rechts = BEVESTIGEN.
+#define FL_BTN_GAP  10
+#define FL_BTN_W    ((FL_BAR_W - FL_BTN_GAP) / 2)
+#define FL_ANN_X    FL_BAR_X
+#define FL_BEV_X    (FL_BAR_X + FL_BTN_W + FL_BTN_GAP)
+
 void screen_flash_teken() {
     tft.fillScreen(C_BG);
     int idx = kies_doel;
     if (idx < 0 || idx >= FW_COUNT) { actief_scherm = SCHERM_KIES; scherm_bouwen = true; return; }
     if (kies_flash_url.length() == 0) kies_flash_url = FW_BIN_URL[idx];
+    fl_bevestigd = false;
 
 #if SCREEN_SMALL
     tft.setTextSize(1); tft.setTextColor(C_CYAN);
-    tft.setCursor(FL_BAR_X, 10); tft.print("Firmware installeren");
+    tft.setCursor(FL_BAR_X, 10); tft.print("Firmware installeren?");
 
     tft.setTextSize(1); tft.setTextColor(FW_KLEUR[idx]);
     tft.setCursor(FL_BAR_X, 28);
@@ -68,14 +78,14 @@ void screen_flash_teken() {
     if (kies_flash_versie.length()) { tft.setTextColor(C_TEXT_DIM); tft.print(" v"); tft.print(kies_flash_versie); }
 
     tft.setTextSize(1); tft.setTextColor(C_TEXT_DIM);
-    tft.setCursor(FL_BAR_X, 46); tft.print("Niet uitschakelen!");
+    tft.setCursor(FL_BAR_X, 46); tft.print("Controleer het adres:");
 
     tft.setCursor(FL_BAR_X, 62);
     char urlbuf[31]; strncpy(urlbuf, kies_flash_url.c_str(), 30); urlbuf[30] = '\0';
     tft.print(urlbuf);
 #else
     tft.setTextSize(2); tft.setTextColor(C_CYAN);
-    tft.setCursor(FL_BAR_X, 60); tft.print("Firmware installeren");
+    tft.setCursor(FL_BAR_X, 60); tft.print("Firmware installeren?");
 
     tft.setTextSize(2); tft.setTextColor(FW_KLEUR[idx]);
     tft.setCursor(FL_BAR_X, 108);
@@ -83,16 +93,36 @@ void screen_flash_teken() {
     if (kies_flash_versie.length()) { tft.setTextColor(C_TEXT_DIM); tft.print(" v"); tft.print(kies_flash_versie); }
 
     tft.setTextSize(1); tft.setTextColor(C_TEXT_DIM);
-    tft.setCursor(FL_BAR_X, 136); tft.print("Niet uitschakelen tijdens het installeren!");
+    tft.setCursor(FL_BAR_X, 136); tft.print("Controleer het adres voordat je bevestigt:");
     tft.setCursor(FL_BAR_X, 152); tft.print(kies_flash_url);
 #endif
 
-    tft.fillRect(FL_BAR_X, FL_BAR_Y, FL_BAR_W, FL_BAR_H, C_SURFACE);
-    tft.drawRect(FL_BAR_X, FL_BAR_Y, FL_BAR_W, FL_BAR_H, C_SURFACE2);
+    ui_knop(FL_ANN_X, FL_BAR_Y, FL_BTN_W, FL_BAR_H, "ANNULEREN", C_SURFACE2, C_TEXT_DIM);
+    ui_knop(FL_BEV_X, FL_BAR_Y, FL_BTN_W, FL_BAR_H, "BEVESTIGEN", C_SURFACE2, C_GREEN);
     fl_pct_last = -1;
 
-    delay(800);
-    screen_flash_start();
+    // Op kleine schermen kan de BEVESTIGEN-knop op dezelfde plek vallen als de
+    // INSTALLEREN-knop van de kaart waar net op getikt is — een vinger die nog
+    // vasthangt van die tik mag hier niet meteen als een (verkeerde) bevestiging
+    // tellen. Consumeer daarom de eerstvolgende aanraking zonder te reageren
+    // (zelfde mechanisme als bij het wekken van een gedimd scherm).
+    scherm_net_gewekt = true;
+}
+
+void screen_flash_run(int x, int y, bool aanraking) {
+    if (!aanraking || fl_bevestigd) return;
+    if (y < FL_BAR_Y || y >= FL_BAR_Y + FL_BAR_H) return;
+
+    if (x >= FL_ANN_X && x < FL_ANN_X + FL_BTN_W) {
+        actief_scherm = SCHERM_KIES;
+        scherm_bouwen = true;
+    } else if (x >= FL_BEV_X && x < FL_BEV_X + FL_BTN_W) {
+        fl_bevestigd = true;
+        tft.fillRect(FL_BAR_X, FL_BAR_Y, FL_BAR_W, FL_BAR_H, C_SURFACE);
+        tft.drawRect(FL_BAR_X, FL_BAR_Y, FL_BAR_W, FL_BAR_H, C_SURFACE2);
+        fl_pct_last = -1;
+        screen_flash_start();
+    }
 }
 
 void screen_flash_start() {

@@ -67,9 +67,9 @@ void hw_loop() {
             touch_verwerkt = true;
             laatste_touch  = millis();
             switch (actief_scherm) {
-                case SCHERM_KIES: screen_kies_run(ts_x, ts_y, true); break;
-                case SCHERM_WIFI: screen_wifi_run(ts_x, ts_y, true); break;
-                default: break;
+                case SCHERM_KIES:  screen_kies_run(ts_x, ts_y, true);  break;
+                case SCHERM_WIFI:  screen_wifi_run(ts_x, ts_y, true);  break;
+                case SCHERM_FLASH: screen_flash_run(ts_x, ts_y, true); break;
             }
         } else {
             touch_verwerkt = true;
