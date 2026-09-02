@@ -56,6 +56,7 @@ void screen_flash_teken() {
     tft.fillScreen(C_BG);
     int idx = kies_doel;
     if (idx < 0 || idx >= FW_COUNT) { actief_scherm = SCHERM_KIES; scherm_bouwen = true; return; }
+    if (kies_flash_url.length() == 0) kies_flash_url = FW_BIN_URL[idx];
 
 #if SCREEN_SMALL
     tft.setTextSize(1); tft.setTextColor(C_CYAN);
@@ -64,14 +65,13 @@ void screen_flash_teken() {
     tft.setTextSize(1); tft.setTextColor(FW_KLEUR[idx]);
     tft.setCursor(FL_BAR_X, 28);
     tft.print(FW_NAAM[idx]);
-    tft.setTextColor(C_TEXT_DIM);
-    tft.print(" - "); tft.print(FW_AUTEUR[idx]);
+    if (kies_flash_versie.length()) { tft.setTextColor(C_TEXT_DIM); tft.print(" v"); tft.print(kies_flash_versie); }
 
     tft.setTextSize(1); tft.setTextColor(C_TEXT_DIM);
     tft.setCursor(FL_BAR_X, 46); tft.print("Niet uitschakelen!");
 
     tft.setCursor(FL_BAR_X, 62);
-    char urlbuf[31]; strncpy(urlbuf, FW_BIN_URL[idx], 30); urlbuf[30] = '\0';
+    char urlbuf[31]; strncpy(urlbuf, kies_flash_url.c_str(), 30); urlbuf[30] = '\0';
     tft.print(urlbuf);
 #else
     tft.setTextSize(2); tft.setTextColor(C_CYAN);
@@ -80,12 +80,11 @@ void screen_flash_teken() {
     tft.setTextSize(2); tft.setTextColor(FW_KLEUR[idx]);
     tft.setCursor(FL_BAR_X, 108);
     tft.print(FW_NAAM[idx]);
-    tft.setTextColor(C_TEXT_DIM);
-    tft.print(" \x97 "); tft.print(FW_AUTEUR[idx]);
+    if (kies_flash_versie.length()) { tft.setTextColor(C_TEXT_DIM); tft.print(" v"); tft.print(kies_flash_versie); }
 
     tft.setTextSize(1); tft.setTextColor(C_TEXT_DIM);
     tft.setCursor(FL_BAR_X, 136); tft.print("Niet uitschakelen tijdens het installeren!");
-    tft.setCursor(FL_BAR_X, 152); tft.print(FW_BIN_URL[idx]);
+    tft.setCursor(FL_BAR_X, 152); tft.print(kies_flash_url);
 #endif
 
     tft.fillRect(FL_BAR_X, FL_BAR_Y, FL_BAR_W, FL_BAR_H, C_SURFACE);
@@ -98,7 +97,8 @@ void screen_flash_teken() {
 
 void screen_flash_start() {
     int idx = kies_doel;
-    const char* url = FW_BIN_URL[idx];
+    if (kies_flash_url.length() == 0) kies_flash_url = FW_BIN_URL[idx];
+    const char* url = kies_flash_url.c_str();
 
     status_teken("Verbinding maken...", C_AMBER);
 
