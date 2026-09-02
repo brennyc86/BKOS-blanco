@@ -15,7 +15,12 @@ int  ts_y = 0;
 
 // ─── Touch-objecten ───────────────────────────────────────────────────────────
 #if PLATFORM_ESP32 && !PLATFORM_WROOM && !PLATFORM_CYD
-    static TAMC_GT911 ts(TS_SDA, TS_SCK, -1, TS_RST, TFT_W, TFT_H);
+    // 490×480 is de GT911-sensor-native resolutie (BKOS-NUI's al geverifieerde
+    // waarde), NIET het scherm se pixelresolutie (TFT_W×TFT_H=800×480) — de
+    // constructor herprogrammeert via setResolution() de MAX_X/MAX_Y-registers
+    // van de chip zelf, dus een verkeerde waarde hier verschuift/schaalt élke
+    // aanraking fout, los van rotatie. Was hier per ongeluk TFT_W/TFT_H.
+    static TAMC_GT911 ts(TS_SDA, TS_SCK, -1, TS_RST, 490, 480);
 
 #elif PLATFORM_PICO
     static XPT2046_Touchscreen ts(PICO_TS_CS, PICO_TS_IRQ);
